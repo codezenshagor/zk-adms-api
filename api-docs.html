@@ -1,0 +1,914 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Push Command API — Usage Guide</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Syne:wght@400;600;700;800&family=Manrope:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#09080f;--bg2:#0f0d1a;--bg3:#141220;--bg4:#1a1726;
+  --bd:rgba(255,255,255,.07);--bd2:rgba(255,255,255,.05);--bd3:rgba(255,255,255,.03);
+  --tx:#dce0f0;--t2:#8a90ab;--t3:#404460;
+  --accent:#b56aff;--blue:#4d9fff;--green:#22d37a;--orange:#f97316;
+  --red:#f05252;--yellow:#fbbf24;--cyan:#22d9d9;
+  --sidebar-w:270px;
+}
+html{scroll-behavior:smooth}
+body{font-family:'Manrope',sans-serif;background:var(--bg);color:var(--tx);font-size:13px;line-height:1.65;display:flex;min-height:100vh}
+
+/* SIDEBAR */
+.sidebar{width:var(--sidebar-w);flex-shrink:0;background:var(--bg2);border-right:1px solid var(--bd);position:fixed;top:0;left:0;bottom:0;overflow-y:auto;z-index:100;display:flex;flex-direction:column}
+.sb-header{padding:22px 20px 18px;border-bottom:1px solid var(--bd)}
+.sb-logo{font-family:'Syne',sans-serif;font-size:15px;font-weight:800;color:var(--tx);letter-spacing:-.02em}
+.sb-logo span{color:var(--accent)}
+.sb-sub{font-size:11px;color:var(--t3);margin-top:3px;font-family:'JetBrains Mono',monospace}
+.sb-badge{display:inline-flex;align-items:center;gap:5px;margin-top:10px;font-size:10px;font-weight:600;font-family:'JetBrains Mono',monospace;background:rgba(181,106,255,.1);color:var(--accent);border:1px solid rgba(181,106,255,.25);border-radius:4px;padding:3px 9px}
+.sb-badge::before{content:'';width:5px;height:5px;border-radius:50%;background:var(--accent);animation:blink 2s infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
+.sb-nav-section{padding:14px 20px 5px;font-size:10px;font-weight:700;color:var(--t3);letter-spacing:.1em;text-transform:uppercase;font-family:'JetBrains Mono',monospace}
+.sb-nav-item{display:flex;align-items:center;gap:9px;padding:7px 12px;margin:1px 8px;border-radius:8px;cursor:pointer;font-size:12.5px;color:var(--t2);text-decoration:none;transition:all .15s}
+.sb-nav-item:hover{background:rgba(255,255,255,.04);color:var(--tx)}
+.sb-nav-item.active{background:rgba(181,106,255,.08);color:var(--accent)}
+.sb-nav-item .m{font-size:9.5px;font-weight:700;font-family:'JetBrains Mono',monospace;padding:1px 5px;border-radius:3px;flex-shrink:0}
+.m.post{background:rgba(240,82,82,.12);color:var(--red)}
+.m.get{background:rgba(34,211,122,.12);color:var(--green)}
+.sb-footer{margin-top:auto;padding:14px 20px;border-top:1px solid var(--bd);font-size:11px;color:var(--t3)}
+.sb-footer a{color:var(--t2);text-decoration:none;transition:color .15s}
+.sb-footer a:hover{color:var(--tx)}
+
+/* MAIN */
+.main{margin-left:var(--sidebar-w);flex:1;padding:0 2.5rem 5rem;max-width:920px}
+
+/* HERO */
+.hero{padding:3rem 0 2.5rem;border-bottom:1px solid var(--bd);margin-bottom:3rem;position:relative;overflow:hidden}
+.hero::before{content:'API';position:absolute;right:-10px;top:-20px;font-family:'Syne',sans-serif;font-size:120px;font-weight:800;color:rgba(181,106,255,.04);pointer-events:none;letter-spacing:-.05em}
+.hero-pill{display:inline-flex;align-items:center;gap:6px;font-size:11px;font-family:'JetBrains Mono',monospace;color:var(--accent);background:rgba(181,106,255,.08);border:1px solid rgba(181,106,255,.2);border-radius:99px;padding:3px 12px;margin-bottom:14px}
+.hero h1{font-family:'Syne',sans-serif;font-size:32px;font-weight:800;color:var(--tx);letter-spacing:-.03em;margin-bottom:10px;line-height:1.15}
+.hero h1 span{color:var(--accent)}
+.hero p{font-size:13.5px;color:var(--t2);line-height:1.8;max-width:560px}
+.hero-tags{display:flex;gap:8px;margin-top:18px;flex-wrap:wrap}
+.hero-tag{font-size:10.5px;font-family:'JetBrains Mono',monospace;color:var(--t3);background:var(--bg3);border:1px solid var(--bd2);padding:3px 10px;border-radius:4px}
+
+/* SECTION */
+.section{margin-bottom:3.5rem;scroll-margin-top:28px}
+.section-label{display:flex;align-items:center;gap:10px;margin-bottom:18px}
+.section-num{font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:600;color:var(--accent);background:rgba(181,106,255,.1);border:1px solid rgba(181,106,255,.2);border-radius:4px;padding:2px 8px}
+.section-title{font-family:'Syne',sans-serif;font-size:20px;font-weight:700;color:var(--tx);letter-spacing:-.02em}
+.section-desc{font-size:12.5px;color:var(--t2);line-height:1.8;margin-bottom:1.2rem;max-width:620px}
+hr{border:none;border-top:1px solid var(--bd);margin:3rem 0}
+
+/* CODE */
+.code-wrap{background:var(--bg2);border:1px solid var(--bd);border-radius:14px;overflow:hidden;margin-bottom:16px}
+.code-header{display:flex;align-items:center;gap:8px;padding:10px 16px;border-bottom:1px solid var(--bd);background:var(--bg3)}
+.code-header .dots{display:flex;gap:5px}
+.code-header .dots span{width:9px;height:9px;border-radius:50%}
+.code-header .dots span:nth-child(1){background:#ff5f57}
+.code-header .dots span:nth-child(2){background:#ffbd2e}
+.code-header .dots span:nth-child(3){background:#28ca41}
+.code-header .lang{font-family:'JetBrains Mono',monospace;font-size:10.5px;color:var(--t3);margin-left:auto}
+.code-header .copy-btn{font-size:10.5px;padding:3px 10px;border-radius:5px;border:1px solid var(--bd);background:var(--bg2);color:var(--t2);cursor:pointer;font-family:'Manrope',sans-serif;font-weight:600;transition:all .15s}
+.code-header .copy-btn:hover{color:var(--tx);border-color:rgba(255,255,255,.15)}
+.code-header .copy-btn.ok{color:var(--green);border-color:rgba(34,211,122,.3)}
+pre{padding:18px 20px;font-family:'JetBrains Mono',monospace;font-size:12px;line-height:1.85;overflow-x:auto;color:var(--tx);tab-size:2}
+.k{color:var(--accent)} .s{color:var(--green)} .c{color:var(--t3);font-style:italic}
+.n{color:var(--blue)} .v{color:var(--orange)} .m{color:var(--yellow)} .f{color:var(--cyan)} .rk{color:var(--red)}
+
+/* TABS */
+.tabs{display:flex;gap:2px;background:var(--bg3);border:1px solid var(--bd2);border-radius:9px;padding:3px;width:fit-content;margin-bottom:10px}
+.tab{font-size:11px;font-weight:600;font-family:'JetBrains Mono',monospace;padding:5px 14px;border-radius:7px;cursor:pointer;color:var(--t3);background:none;border:none;transition:all .15s}
+.tab:hover{color:var(--tx)}
+.tab.active{background:var(--bg2);color:var(--accent);border:1px solid rgba(181,106,255,.25)}
+
+/* ENDPOINT CARD */
+.ep{background:var(--bg2);border:1px solid var(--bd);border-radius:14px;margin-bottom:14px;overflow:hidden}
+.ep-head{display:flex;align-items:center;gap:10px;padding:14px 18px;cursor:pointer;user-select:none}
+.ep-head:hover{background:rgba(255,255,255,.02)}
+.ep-head.open{background:rgba(181,106,255,.03)}
+.method-badge{font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:700;padding:3px 9px;border-radius:5px}
+.POST{background:rgba(240,82,82,.1);color:var(--red);border:1px solid rgba(240,82,82,.2)}
+.GET{background:rgba(34,211,122,.1);color:var(--green);border:1px solid rgba(34,211,122,.2)}
+.ep-title{font-size:13.5px;font-weight:700;color:var(--tx);flex:1;font-family:'Syne',sans-serif}
+.ep-url{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--t3);background:var(--bg3);border:1px solid var(--bd2);padding:2px 10px;border-radius:5px}
+.ep-chevron{width:16px;height:16px;color:var(--t3);transition:transform .2s;flex-shrink:0}
+.ep-head.open .ep-chevron{transform:rotate(90deg)}
+.ep-body{display:none;padding:0 20px 20px;border-top:1px solid var(--bd)}
+.ep-body.show{display:block}
+
+/* PARAM TABLE */
+.pt{width:100%;border-collapse:collapse;font-size:12px;margin:14px 0}
+.pt th{text-align:left;font-size:10px;font-weight:700;color:var(--t3);letter-spacing:.08em;text-transform:uppercase;padding:0 12px 8px 0;font-family:'JetBrains Mono',monospace}
+.pt td{padding:7px 12px 7px 0;border-top:1px solid var(--bd3);vertical-align:top;color:var(--t2);line-height:1.5;font-size:12px}
+.pt td:first-child{font-family:'JetBrains Mono',monospace;color:var(--blue);white-space:nowrap}
+.req{font-size:10px;font-weight:700;font-family:'JetBrains Mono',monospace;color:var(--red)}
+.opt{font-size:10px;font-weight:700;font-family:'JetBrains Mono',monospace;color:var(--t3)}
+
+/* RESPONSE BOX */
+.resp{background:var(--bg3);border:1px solid var(--bd2);border-left:3px solid var(--accent);border-radius:0 10px 10px 0;padding:14px 18px;font-family:'JetBrains Mono',monospace;font-size:12px;line-height:1.85;margin:12px 0;color:var(--t2)}
+.resp .rk{color:var(--blue)} .resp .rv{color:var(--green)} .resp .rs{color:var(--yellow)}
+
+/* NOTES */
+.note{background:rgba(251,191,36,.05);border:1px solid rgba(251,191,36,.15);border-left:3px solid var(--yellow);border-radius:0 10px 10px 0;padding:12px 16px;font-size:12px;color:var(--t2);line-height:1.7;margin:12px 0}
+.note strong{color:var(--yellow)}
+.info{background:rgba(34,211,122,.04);border:1px solid rgba(34,211,122,.12);border-left:3px solid var(--green);border-radius:0 10px 10px 0;padding:12px 16px;font-size:12px;color:var(--t2);line-height:1.7;margin:12px 0}
+.info strong{color:var(--green)}
+code{font-family:'JetBrains Mono',monospace;font-size:11.5px;background:var(--bg3);border:1px solid var(--bd2);padding:1px 6px;border-radius:4px;color:var(--cyan)}
+
+/* CMD TYPE TABLE */
+.ct{width:100%;border-collapse:collapse}
+.ct th{text-align:left;font-size:10px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.08em;padding:10px 16px;background:var(--bg3);font-family:'JetBrains Mono',monospace}
+.ct td{padding:9px 16px;border-top:1px solid var(--bd3);font-size:12px}
+.ct td:first-child{font-family:'JetBrains Mono',monospace;font-size:11.5px;color:var(--accent)}
+.ct td:last-child{color:var(--t2)}
+.ct-wrap{background:var(--bg2);border:1px solid var(--bd);border-radius:14px;overflow:hidden}
+
+/* POSTMAN SECTION */
+.pm-step{display:flex;gap:14px;margin-bottom:14px;align-items:flex-start}
+.pm-num{width:26px;height:26px;border-radius:50%;background:rgba(181,106,255,.15);border:1px solid rgba(181,106,255,.3);color:var(--accent);font-size:11px;font-weight:700;font-family:'JetBrains Mono',monospace;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px}
+.pm-content .pm-title{font-size:13px;font-weight:700;color:var(--tx);margin-bottom:4px}
+.pm-content .pm-desc{font-size:12px;color:var(--t2);line-height:1.7}
+
+/* README SECTION */
+.readme-box{background:var(--bg2);border:1px solid var(--bd);border-radius:14px;overflow:hidden}
+.readme-box-head{padding:12px 18px;border-bottom:1px solid var(--bd);background:var(--bg3);display:flex;align-items:center;gap:8px;font-size:12px;font-weight:700;color:var(--tx)}
+.readme-box pre{padding:18px 20px;font-size:12px;line-height:1.85;color:var(--tx);overflow-x:auto}
+
+@media(max-width:768px){.sidebar{display:none}.main{margin-left:0;padding:0 1rem 3rem}.ep-url{display:none}}
+::-webkit-scrollbar{width:4px;height:4px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:var(--bd);border-radius:99px}
+
+/* sub-label */
+.sub{font-size:10.5px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.08em;margin:16px 0 8px;font-family:'JetBrains Mono',monospace}
+</style>
+</head>
+<body>
+
+<aside class="sidebar">
+  <div class="sb-header">
+    <div class="sb-logo">ZK<span>Command</span> API</div>
+    <div class="sb-sub">Push Command Usage Guide</div>
+    <div class="sb-badge">API Docs v1.0</div>
+  </div>
+
+  <div class="sb-nav-section">Getting Started</div>
+  <a class="sb-nav-item active" href="#quickstart">◆ Quick Start</a>
+  <a class="sb-nav-item" href="#auth">◆ Authentication</a>
+  <a class="sb-nav-item" href="#postman">◆ Postman Setup</a>
+
+  <div class="sb-nav-section">User Management</div>
+  <a class="sb-nav-item" href="#add-user"><span class="m post">POST</span>Add User</a>
+  <a class="sb-nav-item" href="#bulk-user"><span class="m post">POST</span>Bulk Add</a>
+  <a class="sb-nav-item" href="#delete-user"><span class="m post">POST</span>Delete User</a>
+  <a class="sb-nav-item" href="#user-auth"><span class="m post">POST</span>Door Access</a>
+
+  <div class="sb-nav-section">Biometric</div>
+  <a class="sb-nav-item" href="#fingerprint"><span class="m post">POST</span>Fingerprint</a>
+  <a class="sb-nav-item" href="#face"><span class="m post">POST</span>Face</a>
+
+  <div class="sb-nav-section">Attendance</div>
+  <a class="sb-nav-item" href="#get-attendance"><span class="m get">GET</span>Get Attendance</a>
+
+  <div class="sb-nav-section">Device</div>
+  <a class="sb-nav-item" href="#door"><span class="m post">POST</span>Door Control</a>
+  <a class="sb-nav-item" href="#device-ctrl"><span class="m post">POST</span>Reboot/Options</a>
+
+  <div class="sb-nav-section">Status & Reference</div>
+  <a class="sb-nav-item" href="#status"><span class="m get">GET</span>Check Status</a>
+  <a class="sb-nav-item" href="#cmd-types">◆ cmd_type List</a>
+  <a class="sb-nav-item" href="#readme">◆ README.md</a>
+
+  <div class="sb-footer">
+    <a href="push-receiver.html">← Receiver DB Setup</a><br>
+    <span style="margin-top:5px;display:block">Base URL: <code style="font-size:10px">http://ser.test</code></span>
+  </div>
+</aside>
+
+<main class="main">
+
+<div class="hero" id="quickstart">
+  <div class="hero-pill">⚡ Command API</div>
+  <h1>Push <span>Command</span><br>API Usage Guide</h1>
+  <p>ZK device এ user add, delete, fingerprint/face enroll, door control এবং attendance data fetch করার জন্য complete API reference। Postman, PHP এবং Node.js example সহ।</p>
+  <div class="hero-tags">
+    <span class="hero-tag">Base URL: http://ser.test</span>
+    <span class="hero-tag">REST / JSON</span>
+    <span class="hero-tag">API Key Auth</span>
+    <span class="hero-tag">Postman</span>
+    <span class="hero-tag">PHP / Node.js</span>
+  </div>
+</div>
+
+<!-- AUTH -->
+<section class="section" id="auth">
+  <div class="section-label">
+    <span class="section-num">AUTH</span>
+    <span class="section-title">Authentication</span>
+  </div>
+  <p class="section-desc">প্রতিটি request এ এই header দুটি mandatory।</p>
+  <div class="code-wrap">
+    <div class="code-header">
+      <div class="dots"><span></span><span></span><span></span></div>
+      <span class="lang">Request Headers</span>
+    </div>
+    <pre><span class="n">X-API-KEY</span>: <span class="s">YOUR_CLIENT_API_KEY</span>
+<span class="n">Content-Type</span>: <span class="s">application/json</span></pre>
+  </div>
+  <div class="info">
+    <strong>📌 cmd_id rule:</strong> প্রতিটি request এ unique <code>cmd_id</code> দিতে হবে। Recommended format: timestamp + sequence → <code>170000000001</code>। Duplicate cmd_id reject হবে।
+  </div>
+</section>
+
+<hr>
+
+<!-- POSTMAN -->
+<section class="section" id="postman">
+  <div class="section-label">
+    <span class="section-num">01</span>
+    <span class="section-title">Postman Setup</span>
+  </div>
+  <p class="section-desc">Postman দিয়ে API test করার step-by-step guide।</p>
+
+  <div class="pm-step">
+    <div class="pm-num">1</div>
+    <div class="pm-content">
+      <div class="pm-title">Collection তৈরি করুন</div>
+      <div class="pm-desc">Postman → New Collection → Name: <strong>"ZK Push Command API"</strong></div>
+    </div>
+  </div>
+  <div class="pm-step">
+    <div class="pm-num">2</div>
+    <div class="pm-content">
+      <div class="pm-title">Environment Variable সেট করুন</div>
+      <div class="pm-desc">Environments → New → Add variables: <code>base_url</code> = <code>http://ser.test</code> এবং <code>api_key</code> = <code>YOUR_CLIENT_API_KEY</code></div>
+    </div>
+  </div>
+  <div class="pm-step">
+    <div class="pm-num">3</div>
+    <div class="pm-content">
+      <div class="pm-title">Collection-level Auth সেট করুন</div>
+      <div class="pm-desc">Collection → Edit → Authorization → Type: <strong>API Key</strong> → Key: <code>X-API-KEY</code> → Value: <code>{{api_key}}</code> → Add to: <strong>Header</strong></div>
+    </div>
+  </div>
+  <div class="pm-step">
+    <div class="pm-num">4</div>
+    <div class="pm-content">
+      <div class="pm-title">Request তৈরি করুন</div>
+      <div class="pm-desc">New Request → Method: POST → URL: <code>{{base_url}}/api/command/send</code> → Body: raw → JSON → নিচের example body paste করুন।</div>
+    </div>
+  </div>
+  <div class="pm-step">
+    <div class="pm-num">5</div>
+    <div class="pm-content">
+      <div class="pm-title">Pre-request Script (auto cmd_id)</div>
+      <div class="pm-desc">Tests tab এ এই script দিন — auto unique cmd_id generate হবে:</div>
+    </div>
+  </div>
+  <div class="code-wrap">
+    <div class="code-header">
+      <div class="dots"><span></span><span></span><span></span></div>
+      <span class="lang">Postman Pre-request Script</span>
+      <button class="copy-btn" onclick="cp(this)">Copy</button>
+    </div>
+    <pre><span class="c">// Pre-request Script → auto-generate unique cmd_id</span>
+<span class="k">const</span> <span class="n">ts</span>  = <span class="f">Date</span>.<span class="f">now</span>();
+<span class="k">const</span> <span class="n">seq</span> = <span class="f">Math</span>.<span class="f">floor</span>(<span class="f">Math</span>.<span class="f">random</span>() * <span class="v">1000</span>).<span class="f">toString</span>().<span class="f">padStart</span>(<span class="v">3</span>, <span class="s">'0'</span>);
+<span class="n">pm</span>.<span class="n">environment</span>.<span class="f">set</span>(<span class="s">'cmd_id'</span>, <span class="n">ts</span> + <span class="n">seq</span>);</pre>
+  </div>
+  <div class="note">
+    Body তে <code>"cmd_id": "{{cmd_id}}"</code> ব্যবহার করলে auto unique ID পাবেন।
+  </div>
+</section>
+
+<hr>
+
+<!-- ADD USER -->
+<section class="section" id="add-user">
+  <div class="section-label">
+    <span class="section-num">02</span>
+    <span class="section-title">User Management</span>
+  </div>
+</section>
+
+<div class="ep" id="add-user-ep">
+  <div class="ep-head" onclick="toggle(this)">
+    <span class="method-badge POST">POST</span>
+    <span class="ep-title">Add / Update User</span>
+    <span class="ep-url">/api/command/send</span>
+    <svg class="ep-chevron" viewBox="0 0 16 16" fill="none"><path d="M6 4l4 4-4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+  </div>
+  <div class="ep-body">
+    <table class="pt">
+      <tr><th>Field</th><th>Type</th><th>Required</th><th>Note</th></tr>
+      <tr><td>cmd_id</td><td>string</td><td class="req">required</td><td>Unique ID (timestamp+seq)</td></tr>
+      <tr><td>sn</td><td>string</td><td class="req">required</td><td>Device serial number</td></tr>
+      <tr><td>cmd_type</td><td>string</td><td class="req">required</td><td>Must be <code>set_user</code></td></tr>
+      <tr><td>pin</td><td>string</td><td class="req">required</td><td>Employee ID (1–9 digits)</td></tr>
+      <tr><td>name</td><td>string</td><td class="opt">optional</td><td>User display name</td></tr>
+      <tr><td>card</td><td>string</td><td class="opt">optional</td><td>Card / badge number</td></tr>
+      <tr><td>role</td><td>int</td><td class="opt">optional</td><td>0 = user, 14 = admin</td></tr>
+    </table>
+    <div class="sub">Postman Body / PHP Example</div>
+    <div class="tabs">
+      <button class="tab active" onclick="setTab(this,'postman')">Postman</button>
+      <button class="tab" onclick="setTab(this,'php')">PHP</button>
+      <button class="tab" onclick="setTab(this,'node')">Node.js</button>
+    </div>
+    <div class="code-wrap">
+      <div class="code-header"><div class="dots"><span></span><span></span><span></span></div><span class="lang tab-lang">Postman · JSON Body</span><button class="copy-btn" onclick="cp(this)">Copy</button></div>
+      <pre class="tab-postman">{
+  <span class="n">"cmd_id"</span>:   <span class="s">"{{cmd_id}}"</span>,
+  <span class="n">"sn"</span>:       <span class="s">"NYU7251601368"</span>,
+  <span class="n">"cmd_type"</span>: <span class="s">"set_user"</span>,
+  <span class="n">"pin"</span>:      <span class="s">"1001"</span>,
+  <span class="n">"name"</span>:     <span class="s">"Rahim Uddin"</span>,
+  <span class="n">"card"</span>:     <span class="s">"123456"</span>,
+  <span class="n">"role"</span>:     <span class="v">0</span>
+}</pre>
+      <pre class="tab-php" style="display:none"><span class="k">&lt;?php</span>
+<span class="n">$ch</span> = <span class="f">curl_init</span>(<span class="s">'http://ser.test/api/command/send'</span>);
+<span class="n">$data</span> = [
+  <span class="s">'cmd_id'</span>   => <span class="s">'170000000001'</span>,
+  <span class="s">'sn'</span>       => <span class="s">'NYU7251601368'</span>,
+  <span class="s">'cmd_type'</span> => <span class="s">'set_user'</span>,
+  <span class="s">'pin'</span>      => <span class="s">'1001'</span>,
+  <span class="s">'name'</span>     => <span class="s">'Rahim Uddin'</span>,
+  <span class="s">'card'</span>     => <span class="s">'123456'</span>,
+  <span class="s">'role'</span>     => <span class="v">0</span>
+];
+<span class="f">curl_setopt_array</span>(<span class="n">$ch</span>, [
+  <span class="m">CURLOPT_RETURNTRANSFER</span> => <span class="k">true</span>,
+  <span class="m">CURLOPT_POST</span>           => <span class="k">true</span>,
+  <span class="m">CURLOPT_POSTFIELDS</span>     => <span class="f">json_encode</span>(<span class="n">$data</span>),
+  <span class="m">CURLOPT_HTTPHEADER</span>     => [
+    <span class="s">'X-API-KEY: YOUR_CLIENT_API_KEY'</span>,
+    <span class="s">'Content-Type: application/json'</span>
+  ]
+]);
+<span class="n">$result</span> = <span class="f">json_decode</span>(<span class="f">curl_exec</span>(<span class="n">$ch</span>), <span class="k">true</span>);
+<span class="f">curl_close</span>(<span class="n">$ch</span>);
+<span class="f">var_dump</span>(<span class="n">$result</span>);</pre>
+      <pre class="tab-node" style="display:none"><span class="k">const</span> <span class="n">res</span> = <span class="k">await</span> <span class="f">fetch</span>(<span class="s">'http://ser.test/api/command/send'</span>, {
+  <span class="n">method</span>: <span class="s">'POST'</span>,
+  <span class="n">headers</span>: {
+    <span class="s">'X-API-KEY'</span>:    <span class="s">'YOUR_CLIENT_API_KEY'</span>,
+    <span class="s">'Content-Type'</span>: <span class="s">'application/json'</span>
+  },
+  <span class="n">body</span>: <span class="f">JSON</span>.<span class="f">stringify</span>({
+    <span class="n">cmd_id</span>:   <span class="s">'170000000001'</span>,
+    <span class="n">sn</span>:       <span class="s">'NYU7251601368'</span>,
+    <span class="n">cmd_type</span>: <span class="s">'set_user'</span>,
+    <span class="n">pin</span>:      <span class="s">'1001'</span>,
+    <span class="n">name</span>:     <span class="s">'Rahim Uddin'</span>,
+    <span class="n">card</span>:     <span class="s">'123456'</span>,
+    <span class="n">role</span>:     <span class="v">0</span>
+  })
+});
+<span class="f">console</span>.<span class="f">log</span>(<span class="k">await</span> <span class="n">res</span>.<span class="f">json</span>());</pre>
+    </div>
+    <div class="sub">Response</div>
+    <div class="resp">{ <span class="rk">"status"</span>: <span class="rv">"queued"</span>, <span class="rk">"cmd_id"</span>: <span class="rs">"170000000001"</span> }</div>
+  </div>
+</div>
+
+<!-- BULK USER -->
+<div class="ep" id="bulk-user">
+  <div class="ep-head" onclick="toggle(this)">
+    <span class="method-badge POST">POST</span>
+    <span class="ep-title">Bulk Add Users</span>
+    <span class="ep-url">/api/command/send</span>
+    <svg class="ep-chevron" viewBox="0 0 16 16" fill="none"><path d="M6 4l4 4-4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+  </div>
+  <div class="ep-body">
+    <div class="code-wrap">
+      <div class="code-header"><div class="dots"><span></span><span></span><span></span></div><span class="lang">PHP — Bulk Add</span><button class="copy-btn" onclick="cp(this)">Copy</button></div>
+      <pre><span class="n">$data</span> = [
+  <span class="s">'sn'</span>       => <span class="s">'NYU7251601368'</span>,
+  <span class="s">'cmd_type'</span> => <span class="s">'set_user'</span>,
+  <span class="s">'users'</span>    => [
+    [<span class="s">'cmd_id'</span>=><span class="s">'170000000101'</span>,<span class="s">'pin'</span>=><span class="s">'1001'</span>,<span class="s">'name'</span>=><span class="s">'Karim'</span>, <span class="s">'role'</span>=><span class="v">0</span>],
+    [<span class="s">'cmd_id'</span>=><span class="s">'170000000102'</span>,<span class="s">'pin'</span>=><span class="s">'1002'</span>,<span class="s">'name'</span>=><span class="s">'Rahim'</span>, <span class="s">'role'</span>=><span class="v">0</span>],
+    [<span class="s">'cmd_id'</span>=><span class="s">'170000000103'</span>,<span class="s">'pin'</span>=><span class="s">'1003'</span>,<span class="s">'name'</span>=><span class="s">'Jamal'</span>, <span class="s">'role'</span>=><span class="v">0</span>],
+  ]
+];
+<span class="c">// Send with curl (same as above, just change $data)</span></pre>
+    </div>
+  </div>
+</div>
+
+<!-- DELETE USER -->
+<div class="ep" id="delete-user">
+  <div class="ep-head" onclick="toggle(this)">
+    <span class="method-badge POST">POST</span>
+    <span class="ep-title">Delete User</span>
+    <span class="ep-url">/api/command/send</span>
+    <svg class="ep-chevron" viewBox="0 0 16 16" fill="none"><path d="M6 4l4 4-4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+  </div>
+  <div class="ep-body">
+    <div class="code-wrap">
+      <div class="code-header"><div class="dots"><span></span><span></span><span></span></div><span class="lang">JSON Body — Delete User</span><button class="copy-btn" onclick="cp(this)">Copy</button></div>
+      <pre>{
+  <span class="n">"cmd_id"</span>:   <span class="s">"170000000201"</span>,
+  <span class="n">"sn"</span>:       <span class="s">"NYU7251601368"</span>,
+  <span class="n">"cmd_type"</span>: <span class="s">"delete_user"</span>,
+  <span class="n">"pin"</span>:      <span class="s">"1001"</span>
+}</pre>
+    </div>
+    <div class="note"><strong>সব user delete:</strong> <code>"cmd_type": "delete_user_all"</code> — pin field লাগবে না। সতর্কতার সাথে ব্যবহার করুন।</div>
+  </div>
+</div>
+
+<!-- USER AUTHORIZE -->
+<div class="ep" id="user-auth">
+  <div class="ep-head" onclick="toggle(this)">
+    <span class="method-badge POST">POST</span>
+    <span class="ep-title">User Door Access Authorization</span>
+    <span class="ep-url">/api/command/send</span>
+    <svg class="ep-chevron" viewBox="0 0 16 16" fill="none"><path d="M6 4l4 4-4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+  </div>
+  <div class="ep-body">
+    <div class="code-wrap">
+      <div class="code-header"><div class="dots"><span></span><span></span><span></span></div><span class="lang">JSON Body</span><button class="copy-btn" onclick="cp(this)">Copy</button></div>
+      <pre>{
+  <span class="n">"cmd_id"</span>:      <span class="s">"170000000301"</span>,
+  <span class="n">"sn"</span>:          <span class="s">"NYU7251601368"</span>,
+  <span class="n">"cmd_type"</span>:    <span class="s">"set_userauthorize"</span>,
+  <span class="n">"pin"</span>:         <span class="s">"1001"</span>,
+  <span class="n">"timezone_id"</span>: <span class="v">1</span>,
+  <span class="n">"door_id"</span>:     <span class="v">1</span>
+}</pre>
+    </div>
+  </div>
+</div>
+
+<hr>
+
+<!-- FINGERPRINT -->
+<section class="section" id="fingerprint">
+  <div class="section-label">
+    <span class="section-num">03</span>
+    <span class="section-title">Biometric — Fingerprint</span>
+  </div>
+</section>
+
+<div class="ep">
+  <div class="ep-head" onclick="toggle(this)">
+    <span class="method-badge POST">POST</span>
+    <span class="ep-title">Fingerprint Enroll (on device)</span>
+    <span class="ep-url">/api/command/send</span>
+    <svg class="ep-chevron" viewBox="0 0 16 16" fill="none"><path d="M6 4l4 4-4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+  </div>
+  <div class="ep-body">
+    <table class="pt">
+      <tr><th>Field</th><th>Value</th><th>Note</th></tr>
+      <tr><td>cmd_type</td><td><code>enroll_fp</code></td><td>Device display তে fingerprint scan prompt আসবে</td></tr>
+      <tr><td>fp_index</td><td>0–9</td><td>আঙুলের slot (0=right thumb)</td></tr>
+    </table>
+    <div class="code-wrap" style="margin-top:12px">
+      <div class="code-header"><div class="dots"><span></span><span></span><span></span></div><span class="lang">JSON Body — Enroll FP</span><button class="copy-btn" onclick="cp(this)">Copy</button></div>
+      <pre>{
+  <span class="n">"cmd_id"</span>:   <span class="s">"170000000401"</span>,
+  <span class="n">"sn"</span>:       <span class="s">"NYU7251601368"</span>,
+  <span class="n">"cmd_type"</span>: <span class="s">"enroll_fp"</span>,
+  <span class="n">"pin"</span>:      <span class="s">"1001"</span>,
+  <span class="n">"fp_index"</span>: <span class="v">0</span>
+}</pre>
+    </div>
+  </div>
+</div>
+
+<div class="ep" style="margin-top:10px">
+  <div class="ep-head" onclick="toggle(this)">
+    <span class="method-badge POST">POST</span>
+    <span class="ep-title">Fingerprint Set Template (upload)</span>
+    <span class="ep-url">/api/command/send</span>
+    <svg class="ep-chevron" viewBox="0 0 16 16" fill="none"><path d="M6 4l4 4-4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+  </div>
+  <div class="ep-body">
+    <div class="code-wrap">
+      <div class="code-header"><div class="dots"><span></span><span></span><span></span></div><span class="lang">JSON Body — Set FP Template</span><button class="copy-btn" onclick="cp(this)">Copy</button></div>
+      <pre>{
+  <span class="n">"cmd_id"</span>:      <span class="s">"170000000402"</span>,
+  <span class="n">"sn"</span>:          <span class="s">"NYU7251601368"</span>,
+  <span class="n">"cmd_type"</span>:    <span class="s">"set_fp"</span>,
+  <span class="n">"pin"</span>:         <span class="s">"1001"</span>,
+  <span class="n">"fp_index"</span>:    <span class="v">0</span>,
+  <span class="n">"fp_template"</span>: <span class="s">"BASE64_ENCODED_TEMPLATE_DATA"</span>
+}</pre>
+    </div>
+    <div class="note"><strong>fp_template:</strong> ZK SDK থেকে export করা Base64 encoded fingerprint template। Template অন্য device এ transfer এর জন্য ব্যবহার করুন।</div>
+  </div>
+</div>
+
+<hr>
+
+<!-- FACE -->
+<section class="section" id="face">
+  <div class="section-label">
+    <span class="section-num">04</span>
+    <span class="section-title">Biometric — Face</span>
+  </div>
+</section>
+
+<div class="ep">
+  <div class="ep-head" onclick="toggle(this)">
+    <span class="method-badge POST">POST</span>
+    <span class="ep-title">Face Enroll (on device)</span>
+    <span class="ep-url">/api/command/send</span>
+    <svg class="ep-chevron" viewBox="0 0 16 16" fill="none"><path d="M6 4l4 4-4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+  </div>
+  <div class="ep-body">
+    <div class="code-wrap">
+      <div class="code-header"><div class="dots"><span></span><span></span><span></span></div><span class="lang">JSON Body — Enroll Face</span><button class="copy-btn" onclick="cp(this)">Copy</button></div>
+      <pre>{
+  <span class="n">"cmd_id"</span>:   <span class="s">"170000000501"</span>,
+  <span class="n">"sn"</span>:       <span class="s">"NYU7251601368"</span>,
+  <span class="n">"cmd_type"</span>: <span class="s">"enroll_face"</span>,
+  <span class="n">"pin"</span>:      <span class="s">"1001"</span>
+}</pre>
+    </div>
+  </div>
+</div>
+
+<div class="ep" style="margin-top:10px">
+  <div class="ep-head" onclick="toggle(this)">
+    <span class="method-badge POST">POST</span>
+    <span class="ep-title">Face Set Template (upload)</span>
+    <span class="ep-url">/api/command/send</span>
+    <svg class="ep-chevron" viewBox="0 0 16 16" fill="none"><path d="M6 4l4 4-4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+  </div>
+  <div class="ep-body">
+    <div class="code-wrap">
+      <div class="code-header"><div class="dots"><span></span><span></span><span></span></div><span class="lang">JSON Body — Set Face Template</span><button class="copy-btn" onclick="cp(this)">Copy</button></div>
+      <pre>{
+  <span class="n">"cmd_id"</span>:        <span class="s">"170000000502"</span>,
+  <span class="n">"sn"</span>:            <span class="s">"NYU7251601368"</span>,
+  <span class="n">"cmd_type"</span>:      <span class="s">"set_face"</span>,
+  <span class="n">"pin"</span>:           <span class="s">"1001"</span>,
+  <span class="n">"face_template"</span>: <span class="s">"BASE64_ENCODED_FACE_DATA"</span>
+}</pre>
+    </div>
+  </div>
+</div>
+
+<div class="ep" style="margin-top:10px">
+  <div class="ep-head" onclick="toggle(this)">
+    <span class="method-badge POST">POST</span>
+    <span class="ep-title">Delete Face</span>
+    <span class="ep-url">/api/command/send</span>
+    <svg class="ep-chevron" viewBox="0 0 16 16" fill="none"><path d="M6 4l4 4-4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+  </div>
+  <div class="ep-body">
+    <div class="code-wrap">
+      <div class="code-header"><div class="dots"><span></span><span></span><span></span></div><span class="lang">JSON Body — Delete Face</span><button class="copy-btn" onclick="cp(this)">Copy</button></div>
+      <pre>{
+  <span class="n">"cmd_id"</span>:   <span class="s">"170000000503"</span>,
+  <span class="n">"sn"</span>:       <span class="s">"NYU7251601368"</span>,
+  <span class="n">"cmd_type"</span>: <span class="s">"delete_face"</span>,
+  <span class="n">"pin"</span>:      <span class="s">"1001"</span>
+}</pre>
+    </div>
+  </div>
+</div>
+
+<hr>
+
+<!-- GET ATTENDANCE -->
+<section class="section" id="get-attendance">
+  <div class="section-label">
+    <span class="section-num">05</span>
+    <span class="section-title">Attendance Data</span>
+  </div>
+</section>
+
+<div class="ep">
+  <div class="ep-head" onclick="toggle(this)">
+    <span class="method-badge GET">GET</span>
+    <span class="ep-title">Get Attendance Logs</span>
+    <span class="ep-url">/api/attendance</span>
+    <svg class="ep-chevron" viewBox="0 0 16 16" fill="none"><path d="M6 4l4 4-4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+  </div>
+  <div class="ep-body">
+    <table class="pt">
+      <tr><th>Param</th><th>Type</th><th>Required</th><th>Description</th></tr>
+      <tr><td>date</td><td>string</td><td class="opt">optional</td><td>Y-m-d format — নির্দিষ্ট দিনের data</td></tr>
+      <tr><td>from</td><td>string</td><td class="opt">optional</td><td>Y-m-d — start date (range query)</td></tr>
+      <tr><td>to</td><td>string</td><td class="opt">optional</td><td>Y-m-d — end date (range query)</td></tr>
+      <tr><td>pin</td><td>string</td><td class="opt">optional</td><td>Filter by employee ID</td></tr>
+      <tr><td>sn</td><td>string</td><td class="opt">optional</td><td>Filter by device serial</td></tr>
+    </table>
+    <div class="sub">Example Calls</div>
+    <div class="tabs">
+      <button class="tab active" onclick="setTab(this,'postman')">Postman / cURL</button>
+      <button class="tab" onclick="setTab(this,'php')">PHP</button>
+    </div>
+    <div class="code-wrap">
+      <div class="code-header"><div class="dots"><span></span><span></span><span></span></div><span class="lang tab-lang">cURL — Attendance</span><button class="copy-btn" onclick="cp(this)">Copy</button></div>
+      <pre class="tab-postman"><span class="c"># Today's all attendance</span>
+curl -G <span class="s">http://ser.test/api/attendance</span> \
+  -H <span class="s">"X-API-KEY: YOUR_CLIENT_API_KEY"</span> \
+  --data-urlencode <span class="s">"date=2026-03-31"</span>
+
+<span class="c"># Date range for one employee</span>
+curl -G <span class="s">http://ser.test/api/attendance</span> \
+  -H <span class="s">"X-API-KEY: YOUR_CLIENT_API_KEY"</span> \
+  --data-urlencode <span class="s">"from=2026-03-01"</span> \
+  --data-urlencode <span class="s">"to=2026-03-31"</span> \
+  --data-urlencode <span class="s">"pin=1001"</span></pre>
+      <pre class="tab-php" style="display:none"><span class="k">&lt;?php</span>
+<span class="c">// Today attendance</span>
+<span class="n">$params</span> = <span class="f">http_build_query</span>([<span class="s">'date'</span> => <span class="f">date</span>(<span class="s">'Y-m-d'</span>)]);
+<span class="n">$ch</span> = <span class="f">curl_init</span>(<span class="s">"http://ser.test/api/attendance?{$params}"</span>);
+<span class="f">curl_setopt_array</span>(<span class="n">$ch</span>, [
+  <span class="m">CURLOPT_RETURNTRANSFER</span> => <span class="k">true</span>,
+  <span class="m">CURLOPT_HTTPHEADER</span>     => [<span class="s">'X-API-KEY: YOUR_CLIENT_API_KEY'</span>]
+]);
+<span class="n">$data</span> = <span class="f">json_decode</span>(<span class="f">curl_exec</span>(<span class="n">$ch</span>), <span class="k">true</span>);
+<span class="f">curl_close</span>(<span class="n">$ch</span>);
+
+<span class="k">foreach</span> (<span class="n">$data</span>[<span class="s">'records'</span>] <span class="k">as</span> <span class="n">$log</span>) {
+  <span class="k">echo</span> <span class="s">"{$log['main_id']} | {$log['timestamp']} | state:{$log['state']}\n"</span>;
+}</pre>
+    </div>
+    <div class="sub">Response</div>
+    <div class="resp">{
+  <span class="rk">"status"</span>:  <span class="rv">"ok"</span>,
+  <span class="rk">"total"</span>:   <span class="rs">42</span>,
+  <span class="rk">"records"</span>: [
+    { <span class="rk">"id"</span>:<span class="rs">1</span>, <span class="rk">"main_id"</span>:<span class="rs">"1001"</span>, <span class="rk">"state"</span>:<span class="rs">"0"</span>, <span class="rk">"timestamp"</span>:<span class="rs">"2026-03-31 09:00:00"</span>, <span class="rk">"device_serial"</span>:<span class="rs">"NYU7251601368"</span> },
+    { <span class="rk">"id"</span>:<span class="rs">2</span>, <span class="rk">"main_id"</span>:<span class="rs">"1001"</span>, <span class="rk">"state"</span>:<span class="rs">"1"</span>, <span class="rk">"timestamp"</span>:<span class="rs">"2026-03-31 18:00:00"</span>, <span class="rk">"device_serial"</span>:<span class="rs">"NYU7251601368"</span> }
+  ]
+}</div>
+  </div>
+</div>
+
+<hr>
+
+<!-- DOOR CONTROL -->
+<section class="section" id="door">
+  <div class="section-label">
+    <span class="section-num">06</span>
+    <span class="section-title">Door Control</span>
+  </div>
+</section>
+
+<div class="ep">
+  <div class="ep-head" onclick="toggle(this)">
+    <span class="method-badge POST">POST</span>
+    <span class="ep-title">Open / Lock / Unlock Door</span>
+    <span class="ep-url">/api/command/send</span>
+    <svg class="ep-chevron" viewBox="0 0 16 16" fill="none"><path d="M6 4l4 4-4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+  </div>
+  <div class="ep-body">
+    <table class="pt">
+      <tr><th>cmd_type</th><th>Description</th></tr>
+      <tr><td>door_open</td><td>N সেকেন্ডের জন্য open (<code>open_seconds</code> দিন)</td></tr>
+      <tr><td>door_lock</td><td>Door lock করুন</td></tr>
+      <tr><td>door_unlock</td><td>Door indefinitely unlock করুন</td></tr>
+    </table>
+    <div class="code-wrap" style="margin-top:12px">
+      <div class="code-header"><div class="dots"><span></span><span></span><span></span></div><span class="lang">JSON Body — Door Open</span><button class="copy-btn" onclick="cp(this)">Copy</button></div>
+      <pre>{
+  <span class="n">"cmd_id"</span>:       <span class="s">"170000000601"</span>,
+  <span class="n">"sn"</span>:           <span class="s">"NYU7251601368"</span>,
+  <span class="n">"cmd_type"</span>:     <span class="s">"door_open"</span>,
+  <span class="n">"door_no"</span>:      <span class="v">1</span>,
+  <span class="n">"open_seconds"</span>: <span class="v">5</span>
+}</pre>
+    </div>
+  </div>
+</div>
+
+<!-- DEVICE CTRL -->
+<section class="section" id="device-ctrl" style="margin-top:2rem;margin-bottom:0">
+  <div class="section-label">
+    <span class="section-num">07</span>
+    <span class="section-title">Device Control</span>
+  </div>
+</section>
+
+<div class="ep" style="margin-top:12px">
+  <div class="ep-head" onclick="toggle(this)">
+    <span class="method-badge POST">POST</span>
+    <span class="ep-title">Reboot / Set Options</span>
+    <span class="ep-url">/api/command/send</span>
+    <svg class="ep-chevron" viewBox="0 0 16 16" fill="none"><path d="M6 4l4 4-4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+  </div>
+  <div class="ep-body">
+    <div class="code-wrap">
+      <div class="code-header"><div class="dots"><span></span><span></span><span></span></div><span class="lang">JSON — Reboot</span><button class="copy-btn" onclick="cp(this)">Copy</button></div>
+      <pre>{ <span class="n">"cmd_id"</span>:<span class="s">"170000000701"</span>, <span class="n">"sn"</span>:<span class="s">"NYU7251601368"</span>, <span class="n">"cmd_type"</span>:<span class="s">"reboot"</span> }</pre>
+    </div>
+    <div class="code-wrap">
+      <div class="code-header"><div class="dots"><span></span><span></span><span></span></div><span class="lang">JSON — Set Options (tab-separated)</span><button class="copy-btn" onclick="cp(this)">Copy</button></div>
+      <pre>{
+  <span class="n">"cmd_id"</span>:      <span class="s">"170000000801"</span>,
+  <span class="n">"sn"</span>:          <span class="s">"NYU7251601368"</span>,
+  <span class="n">"cmd_type"</span>:    <span class="s">"set_options"</span>,
+  <span class="n">"options_str"</span>: <span class="s">"Volume=3\tVoice=0"</span>
+}</pre>
+    </div>
+  </div>
+</div>
+
+<hr>
+
+<!-- STATUS -->
+<section class="section" id="status">
+  <div class="section-label">
+    <span class="section-num">08</span>
+    <span class="section-title">Command Status Check</span>
+  </div>
+</section>
+
+<div class="ep">
+  <div class="ep-head" onclick="toggle(this)">
+    <span class="method-badge GET">GET</span>
+    <span class="ep-title">Single Command Status</span>
+    <span class="ep-url">/api/command/status?cmd_id=...</span>
+    <svg class="ep-chevron" viewBox="0 0 16 16" fill="none"><path d="M6 4l4 4-4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+  </div>
+  <div class="ep-body">
+    <div class="code-wrap">
+      <div class="code-header"><div class="dots"><span></span><span></span><span></span></div><span class="lang">cURL</span><button class="copy-btn" onclick="cp(this)">Copy</button></div>
+      <pre>curl -G <span class="s">http://ser.test/api/command/status</span> \
+  -H <span class="s">"X-API-KEY: YOUR_CLIENT_API_KEY"</span> \
+  --data-urlencode <span class="s">"cmd_id=170000000001"</span></pre>
+    </div>
+    <div class="resp">{
+  <span class="rk">"cmd_id"</span>:   <span class="rs">"170000000001"</span>,
+  <span class="rk">"status"</span>:   <span class="rv">"success"</span>,
+  <span class="rk">"response"</span>: <span class="rv">"OK"</span>,
+  <span class="rk">"sent_at"</span>:  <span class="rs">"2026-03-31 10:00:00"</span>
+}</div>
+    <div class="note"><strong>status values:</strong> <code>pending</code> = device এখনো receive করেনি · <code>sent</code> = device এ গেছে · <code>success</code> = execute হয়েছে · <code>failed</code> = error</div>
+  </div>
+</div>
+
+<hr>
+
+<!-- CMD TYPES -->
+<section class="section" id="cmd-types">
+  <div class="section-label">
+    <span class="section-num">09</span>
+    <span class="section-title">cmd_type Reference</span>
+  </div>
+  <div class="ct-wrap">
+    <table class="ct">
+      <thead><tr><th>cmd_type</th><th>Description</th></tr></thead>
+      <tbody>
+        <tr><td>set_user</td><td>User add / update করুন</td></tr>
+        <tr><td>delete_user</td><td>Single user delete (pin দিন)</td></tr>
+        <tr><td>delete_user_all</td><td>সব user delete — সতর্কতার সাথে!</td></tr>
+        <tr><td>set_userauthorize</td><td>Door access permission দিন</td></tr>
+        <tr><td>enroll_fp</td><td>Device screen এ fingerprint enrollment trigger</td></tr>
+        <tr><td>set_fp</td><td>Base64 fingerprint template upload</td></tr>
+        <tr><td>enroll_face</td><td>Device screen এ face enrollment trigger</td></tr>
+        <tr><td>set_face</td><td>Base64 face template upload</td></tr>
+        <tr><td>delete_face</td><td>Face template delete</td></tr>
+        <tr><td>door_open</td><td>Door open করুন (open_seconds সহ)</td></tr>
+        <tr><td>door_lock</td><td>Door lock করুন</td></tr>
+        <tr><td>door_unlock</td><td>Door unlock করুন indefinitely</td></tr>
+        <tr><td>reboot</td><td>Device restart করুন</td></tr>
+        <tr><td>set_options</td><td>Device settings (tab-separated key=value)</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<hr>
+
+<!-- README -->
+<section class="section" id="readme">
+  <div class="section-label">
+    <span class="section-num">10</span>
+    <span class="section-title">README.md (GitHub)</span>
+  </div>
+  <p class="section-desc">GitHub এ upload করার জন্য README.md content। Copy করে <code>README.md</code> ফাইলে paste করুন।</p>
+
+  <div class="readme-box">
+    <div class="readme-box-head">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+      README.md
+      <button class="copy-btn" onclick="cp(this)" style="margin-left:auto">Copy</button>
+    </div>
+    <pre># ZK Attendance Push API
+
+ZK device এর attendance data receive করে DB তে store করার জন্য PHP-based push receiver এবং device management command API।
+
+## Features
+- ✅ ZK PushDispatcher থেকে attendance data receive
+- ✅ Multiple device support (serial + API key per device)
+- ✅ SQLite এবং MySQL উভয় support
+- ✅ User add/delete/bulk operations
+- ✅ Fingerprint এবং Face enrollment
+- ✅ Door control (open/lock/unlock)
+- ✅ Command status tracking
+
+## Requirements
+- PHP 8.0+ (PDO, SQLite/MySQL extension)
+- Web server (Apache/Nginx)
+- ZK device with PushDispatcher enabled
+
+## Quick Setup
+
+### 1. Device Configuration
+Device এর Server Settings এ দিন:
+- Server Address: `https://yourdomain.com`
+- Server Port: `443`
+- Push Path: `/zkrcv2`
+- Push Interval: `30` (seconds)
+
+### 2. Database Setup
+
+**SQLite:**
+```php
+$pdo = new PDO('sqlite:' . __DIR__ . '/attendance.db');
+$pdo->exec("PRAGMA journal_mode=WAL");
+```
+
+**MySQL:**
+```sql
+CREATE TABLE att_log (
+  id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  main_id VARCHAR(50) NOT NULL,
+  state VARCHAR(5) DEFAULT '0',
+  timestamp DATETIME NOT NULL,
+  type VARCHAR(20) DEFAULT 'attlog',
+  device_serial VARCHAR(100) DEFAULT NULL,
+  UNIQUE KEY uq_punch (main_id, timestamp, device_serial)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+```
+
+### 3. API Key Setup
+```php
+define('EXPECTED_API_KEY', 'your-secret-api-key-here');
+```
+
+## API Usage
+
+### Add User
+```bash
+curl -X POST http://yourdomain.com/api/command/send \
+  -H "X-API-KEY: YOUR_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"cmd_id":"170000000001","sn":"DEVICE_SN","cmd_type":"set_user","pin":"1001","name":"Rahim","role":0}'
+```
+
+### Get Attendance
+```bash
+curl -G http://yourdomain.com/api/attendance \
+  -H "X-API-KEY: YOUR_KEY" \
+  --data-urlencode "date=2026-03-31"
+```
+
+## Documentation
+- 📄 [Push Receiver Setup](push-receiver.html) — DB schema, SQLite/MySQL, PHP/Laravel/Node.js
+- 📄 [Command API Docs](api-docs.html) — Full endpoint reference
+
+## License
+MIT</pre>
+  </div>
+</section>
+
+</main>
+
+<script>
+function toggle(head) {
+  const body = head.nextElementSibling;
+  const open = body.classList.contains('show');
+  body.classList.toggle('show', !open);
+  head.classList.toggle('open', !open);
+}
+function setTab(btn, lang) {
+  const body = btn.closest('.ep-body') || btn.closest('.section') || btn.parentElement.parentElement;
+  btn.closest('.tabs').querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  btn.classList.add('active');
+  const wrap = btn.closest('.tabs').nextElementSibling;
+  wrap.querySelectorAll('pre').forEach(p => { p.style.display = 'none'; });
+  const target = wrap.querySelector('.tab-' + lang);
+  if (target) target.style.display = '';
+  const langEl = wrap.querySelector('.tab-lang');
+  if (langEl) {
+    const labels = { postman:'Postman / cURL', php:'PHP', node:'Node.js' };
+    langEl.textContent = labels[lang] || lang;
+  }
+}
+function cp(btn) {
+  const wrap = btn.closest('.code-wrap') || btn.closest('.readme-box');
+  const pre = wrap ? [...wrap.querySelectorAll('pre')].find(p => p.style.display !== 'none') : null;
+  if (!pre) return;
+  navigator.clipboard.writeText(pre.innerText).then(() => {
+    btn.textContent = 'Copied!'; btn.classList.add('ok');
+    setTimeout(() => { btn.textContent = 'Copy'; btn.classList.remove('ok'); }, 1800);
+  });
+}
+const navItems = document.querySelectorAll('.sb-nav-item[href^="#"]');
+const sections = [...navItems].map(n => document.querySelector(n.getAttribute('href'))).filter(Boolean);
+window.addEventListener('scroll', () => {
+  let cur = '';
+  sections.forEach(s => { if (window.scrollY >= s.offsetTop - 100) cur = '#' + s.id; });
+  navItems.forEach(n => n.classList.toggle('active', n.getAttribute('href') === cur));
+}, { passive: true });
+</script>
+</body>
+</html>
